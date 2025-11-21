@@ -65,19 +65,26 @@ public class CommandExecutor {
                 }
  
                 if (arg.equals(".")) {
-                    return ""; // no cambia de carpeta
+                    return ""; 
                 }
                 if (arg.equals("..")){
                     return "Ruta inválida.\n";
                 }
-                // Prohibir múltiples puntos como "..."
+               
                 if (arg.matches("\\.{3,}")) {
                     return "Ruta inválida.\n";
                 }
 
                 // Cambiar a carpeta normal
-                File newPath = new File(currentDir, arg);
+                File newPath;
+                
+                File temp = new File(arg);
 
+                if (temp.isAbsolute()) {
+                    newPath = temp;
+                } else {
+                    newPath = new File(currentDir, arg);
+                }
                 if (!newPath.exists())
                     return "La carpeta no existe.\n";
 
