@@ -10,17 +10,21 @@ package lab5_file;
  */
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import javax.swing.*;
 
 public class Consola extends JFrame {
 
     private JTextArea consoleArea;
     private JTextField inputField;
+    private boolean writingMode = false;
+    private File fileBeingWrittenTo = null;
+    private StringBuilder writeBuffer = new StringBuilder();
 
-    // Ruta inicial
     private String currentPath = System.getProperty("user.dir");
 
-    // Aquí se conectará tu intérprete más adelante:
     private CommandExecutor executor = new CommandExecutor();
 
     public Consola() {
@@ -59,23 +63,55 @@ public class Consola extends JFrame {
         add(inputField, BorderLayout.SOUTH);
     }
 
-    // Mostrar el prompt
     private void printPrompt() {
         consoleArea.append(currentPath + "> ");
     }
 
-    // Procesar lo que el usuario escribe
     private void processInput() {
-        String command = inputField.getText().trim();
+        String command = inputField.getText();
         inputField.setText("");
 
-        // Mostrar lo que escribió el usuario
+        // MODO ESCRITURA
+        if (writingMode) {
+            consoleArea.append(command + "\n");
+
+            if (command.equals("<FIN>")) {
+                // Guardar en archivo
+                try {
+                    Files.writeString(fileBeingWrittenTo.toPath(), writeBuffer.toString());
+                    consoleArea.append("Archivo escrito correctamente.\n");
+                } catch (IOException e) {
+                    consoleArea.append("Error escribiendo archivo.\n");
+                }
+
+                // Salir de modo escritura
+                writingMode = false;
+                fileBeingWrittenTo = null;
+                writeBuffer = new StringBuilder();
+
+                printPrompt();
+                return;
+            }
+
+            // Acumular texto
+            writeBuffer.append(command).append(System.lineSeparator());
+            return;
+        }
+
         consoleArea.append(command + "\n");
 
-        // Ejecutar comando (esto llamará tu lógica)
         String output = executor.execute(command, currentPath);
 
-        // Actualizar ruta si el comando lo cambió
+        // Activar modo escritura si el comando lo pide
+        if (output.startsWith("WR_START:")) {
+            String filePath = output.replace("WR_START:", "");
+            fileBeingWrittenTo = new File(filePath);
+            writingMode = true;
+
+            consoleArea.append("Ingrese texto (termine con <FIN>):\n");
+            return;
+        }
+
         if (output.startsWith("PATH_CHANGE:")) {
             currentPath = output.replace("PATH_CHANGE:", "");
         } else {
@@ -83,10 +119,9 @@ public class Consola extends JFrame {
         }
 
         printPrompt();
-
-        // Auto-scroll
         consoleArea.setCaretPosition(consoleArea.getDocument().getLength());
     }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {

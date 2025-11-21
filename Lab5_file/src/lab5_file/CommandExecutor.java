@@ -54,20 +54,38 @@ public class CommandExecutor {
                 return "Eliminado correctamente.\n";
 
             case "cd":
-                if (arg.isEmpty()) return "Debe ingresar carpeta.\n";
+                if (arg.isEmpty())
+                    return "Debe ingresar una carpeta.\n";
 
-                // CD .. para subir
-                if (arg.equals("..")) {
+                if (arg.equals("...")) {
                     File parent = currentDir.getParentFile();
-                    if (parent == null) return "Ya está en la raíz.\n";
+                    if (parent == null)
+                        return "Ya está en la raíz.\n";
                     return "PATH_CHANGE:" + parent.getAbsolutePath();
                 }
+ 
+                if (arg.equals(".")) {
+                    return ""; // no cambia de carpeta
+                }
+                if (arg.equals("..")){
+                    return "Ruta inválida.\n";
+                }
+                // Prohibir múltiples puntos como "..."
+                if (arg.matches("\\.{3,}")) {
+                    return "Ruta inválida.\n";
+                }
 
+                // Cambiar a carpeta normal
                 File newPath = new File(currentDir, arg);
-                if (!newPath.exists()) return "La carpeta no existe.\n";
-                if (!newPath.isDirectory()) return "No es una carpeta.\n";
+
+                if (!newPath.exists())
+                    return "La carpeta no existe.\n";
+
+                if (!newPath.isDirectory())
+                    return "No es una carpeta.\n";
 
                 return "PATH_CHANGE:" + newPath.getAbsolutePath();
+
 
    
             case "dir":
@@ -89,12 +107,12 @@ public class CommandExecutor {
                 return LocalTime.now().withNano(0).toString() + "\n";
 
             case "wr":
-                if (arg.isEmpty()) return "Debe indicar archivo.\n";
+                if (arg.isEmpty()) return "Debe indicar un archivo.\n";
 
-                File fileWrite = new File(currentDir, arg);
-                if (!fileWrite.exists()) return "El archivo no existe.\n";
+                File writeFile = new File(currentDir, arg);
+                if (!writeFile.exists()) return "El archivo no existe.\n";
 
-                return writeToFile(fileWrite);
+                return "WR_START:" + writeFile.getAbsolutePath();
 
             case "rd":
                 if (arg.isEmpty()) return "Debe indicar archivo.\n";
