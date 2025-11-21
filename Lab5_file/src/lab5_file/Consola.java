@@ -40,6 +40,10 @@ public class Consola {
          
            while (temp.padre != null) { 
                
+               temp = temp.padre;
+               ruta = temp.nombre + "\\" + ruta;
+               
            }
+           return ruta;
          }
 }
